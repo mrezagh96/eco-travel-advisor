@@ -1,0 +1,120 @@
+version: "3.1"
+
+rules:
+
+# ---- small talk -------------------------------------------------------------
+- rule: Greet the user
+  steps:
+    - intent: greet
+    - action: utter_greet
+
+- rule: Say goodbye
+  steps:
+    - intent: goodbye
+    - action: utter_goodbye
+
+- rule: Respond to bot challenge
+  steps:
+    - intent: bot_challenge
+    - action: utter_bot_challenge
+
+- rule: Respond to thanks
+  steps:
+    - intent: thank_you
+    - action: utter_thank_you
+
+# ---- trip planning form -------------------------------------------------------
+- rule: Activate trip planning form
+  steps:
+    - intent: ask_trip_planning
+    - action: trip_planning_form
+    - active_loop: trip_planning_form
+
+- rule: Submit trip planning form
+  condition:
+    - active_loop: trip_planning_form
+  steps:
+    - action: trip_planning_form
+    - active_loop: null
+    - action: action_generate_trip_recommendations
+
+# ---- post-recommendation actions --------------------------------------------
+- rule: Confirm booking
+  steps:
+    - intent: confirm_booking
+    - action: action_confirm_booking
+
+- rule: See more options
+  steps:
+    - intent: see_more_options
+    - action: action_see_more_options
+
+# ---- standalone data lookups (work outside the trip form too) --------------
+- rule: Answer weather question
+  steps:
+    - intent: ask_weather
+    - action: action_get_weather
+
+- rule: Answer currency exchange question
+  steps:
+    - intent: ask_currency_exchange
+    - action: action_get_currency_exchange
+
+- rule: Answer carbon footprint question
+  steps:
+    - intent: ask_carbon_footprint
+    - action: action_get_carbon_footprint
+
+- rule: Answer carbon offset info question
+  steps:
+    - intent: ask_carbon_offset_info
+    - action: utter_carbon_offset_info
+
+# ---- human handover ----------------------------------------------------------
+- rule: Human handover requested directly
+  steps:
+    - intent: request_human_handover
+    - action: action_handover_to_human
+
+# ---- smart fallback (see actions/fallback.py) --------------------------------
+# Both routes below share ONE action. Whether the user typed something DIET
+# genuinely could not classify (nlu_fallback, raised by FallbackClassifier in
+# config.yml) or something clearly outside the bot's job (out_of_scope, a
+# trained intent), the recovery experience should be identical from the
+# user's point of view. action_smart_fallback tracks a per-streak nudge
+# counter (1st/2nd/3rd attempt) and a whole-conversation give-up counter
+# (capped at 5, per the brief for this project) and decides what to say.
+- rule: Handle low-confidence or ambiguous messages
+  steps:
+    - intent: nlu_fallback
+    - action: action_smart_fallback
+
+- rule: Handle clearly off-topic messages
+  steps:
+    - intent: out_of_scope
+    - action: action_smart_fallback
+
+# "Unhappy path" versions of the same two rules: without these, a fallback
+# triggered WHILE trip_planning_form is active would just get silently
+# absorbed by the form (it would try, and fail, to fill the current
+# requested_slot and re-ask the same question with no acknowledgement).
+# These loop-scoped rules take priority over the generic ones above whenever
+# the form is active, run the same action_smart_fallback, then explicitly
+# hand control back to the form so it re-asks whatever slot it was on.
+- rule: Handle low-confidence messages during trip planning
+  condition:
+    - active_loop: trip_planning_form
+  steps:
+    - intent: nlu_fallback
+    - action: action_smart_fallback
+    - action: trip_planning_form
+    - active_loop: trip_planning_form
+
+- rule: Handle off-topic messages during trip planning
+  condition:
+    - active_loop: trip_planning_form
+  steps:
+    - intent: out_of_scope
+    - action: action_smart_fallback
+    - action: trip_planning_form
+    - active_loop: trip_planning_form

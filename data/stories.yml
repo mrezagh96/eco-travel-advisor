@@ -1,0 +1,99 @@
+version: "3.1"
+
+stories:
+
+# ---- Branch 1: cost/balanced sustainability -> no adaptive follow-up -------
+- story: full trip planning journey, cost-conscious traveller
+  steps:
+    - intent: greet
+    - action: utter_greet
+    - intent: ask_trip_planning
+      entities:
+        - origin_city: "Berlin"
+        - destination_city: "Lisbon"
+    - action: trip_planning_form
+    - active_loop: trip_planning_form
+    - active_loop: null
+    - action: action_generate_trip_recommendations
+    - intent: confirm_booking
+    - action: action_confirm_booking
+    - intent: goodbye
+    - action: utter_goodbye
+
+# ---- Branch 2: high sustainability -> adaptive priority_focus question ----
+# This is the branch that required_slots() in actions/fallback.py adds at
+# runtime (see domain.yml's comment on the form). Per "Making a Bot Behave"
+# §6.2, each adaptive branch gets its own story so TEDPolicy sees both paths.
+- story: full trip planning journey, eco-priority traveller
+  steps:
+    - intent: ask_trip_planning
+      entities:
+        - origin_city: "Hannover"
+        - destination_city: "Rome"
+    - action: trip_planning_form
+    - active_loop: trip_planning_form
+    - active_loop: null
+    - action: action_generate_trip_recommendations
+    - intent: see_more_options
+    - action: action_see_more_options
+    - intent: confirm_booking
+    - action: action_confirm_booking
+
+# ---- Branch 3: one off-topic detour, then the user comes back -------------
+- story: trip planning interrupted once by an off-topic question
+  steps:
+    - intent: ask_trip_planning
+      entities:
+        - origin_city: "Munich"
+        - destination_city: "Vienna"
+    - action: trip_planning_form
+    - active_loop: trip_planning_form
+    - intent: out_of_scope
+    - action: action_smart_fallback
+    - action: trip_planning_form
+    - active_loop: null
+    - action: action_generate_trip_recommendations
+
+# ---- Branch 4: repeated off-topic messages exhaust the nudge budget -------
+- story: user goes off-topic three times in a row
+  steps:
+    - intent: greet
+    - action: utter_greet
+    - intent: out_of_scope
+    - action: action_smart_fallback
+    - intent: out_of_scope
+    - action: action_smart_fallback
+    - intent: out_of_scope
+    - action: action_smart_fallback
+    - intent: ask_trip_planning
+      entities:
+        - origin_city: "Berlin"
+        - destination_city: "Porto"
+    - action: trip_planning_form
+    - active_loop: trip_planning_form
+
+# ---- Standalone data lookups, no trip form involved ------------------------
+- story: quick weather check
+  steps:
+    - intent: greet
+    - action: utter_greet
+    - intent: ask_weather
+      entities:
+        - city_name: "Lisbon"
+    - action: action_get_weather
+
+- story: currency exchange lookup
+  steps:
+    - intent: ask_currency_exchange
+      entities:
+        - from_currency: "USD"
+        - to_currency: "EUR"
+    - action: action_get_currency_exchange
+
+# ---- Escalation straight to a human, no fallback needed --------------------
+- story: user asks for a human straight away
+  steps:
+    - intent: greet
+    - action: utter_greet
+    - intent: request_human_handover
+    - action: action_handover_to_human

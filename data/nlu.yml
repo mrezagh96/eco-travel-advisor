@@ -1,0 +1,234 @@
+version: "3.1"
+
+nlu:
+
+# NOTE: `nlu_fallback` is deliberately NOT given training examples here —
+# it is a reserved intent name that Rasa's FallbackClassifier assigns
+# automatically whenever DIET's confidence is too low or too ambiguous
+# (see config.yml). Writing examples for it would be meaningless.
+
+- intent: greet
+  examples: |
+    - hi
+    - hello
+    - hey there
+    - good morning
+    - good afternoon
+    - hiya
+    - hey Eco Advisor
+    - hello, are you there?
+    - yo
+
+- intent: goodbye
+  examples: |
+    - bye
+    - goodbye
+    - see you later
+    - that's all for now
+    - I'm done, thanks
+    - talk to you later
+    - catch you later
+
+- intent: affirm
+  examples: |
+    - yes
+    - yep
+    - sure
+    - that's right
+    - correct
+    - sounds good
+    - go ahead
+    - yes please
+
+- intent: deny
+  examples: |
+    - no
+    - nope
+    - not really
+    - that's not right
+    - no thanks
+    - cancel that
+
+- intent: thank_you
+  examples: |
+    - thanks
+    - thank you
+    - thanks a lot
+    - appreciate it
+    - cheers, that helps
+
+- intent: bot_challenge
+  examples: |
+    - are you a real person?
+    - am I talking to a human?
+    - are you a bot?
+    - is this an AI?
+    - who am I talking to?
+
+- intent: ask_trip_planning
+  examples: |
+    - I want to go from [Berlin](origin_city) to [Lisbon](destination_city)
+    - I'd like to travel from [London](origin_city) to [Rome](destination_city)
+    - plan a trip from [Paris](origin_city) to [Copenhagen](destination_city)
+    - I'm flying from [Hamburg](origin_city) to [Barcelona](destination_city)
+    - can you help me get from [Munich](origin_city) to [Vienna](destination_city)?
+    - trip from [Madrid](origin_city) to [Amsterdam](destination_city)
+    - I need to travel from [New York](origin_city) to [Lisbon](destination_city)
+    - going from [Frankfurt](origin_city) to [Athens](destination_city)
+    - I want to visit [Prague](destination_city), leaving from [Berlin](origin_city)
+    - help me plan a sustainable trip to [Rome](destination_city) from [Milan](origin_city)
+    - from [Berlin](origin_city) to [Porto](destination_city) please
+    - book me a trip from [Stockholm](origin_city) to [Oslo](destination_city)
+    - I want to travel to [Lisbon](destination_city)
+    - can I go to [Vienna](destination_city)?
+    - planning a city break in [Copenhagen](destination_city)
+    - I'll be leaving from [Dublin](origin_city)
+    - departing from [Zurich](origin_city)
+    - [Berlin](origin_city) to [Lisbon](destination_city)
+    - [London](origin_city) - [Barcelona](destination_city)
+    - I want an eco-friendly trip from [Hannover](origin_city) to [Lisbon](destination_city)
+
+- intent: inform_dates
+  examples: |
+    - the 14th of November
+    - 2026-11-14
+    - sometime in mid November
+    - next weekend
+    - from November 10th to November 17th
+    - the first week of December
+    - 10 December to 20 December
+    - I'm flexible on dates
+    - around Christmas
+    - early spring next year
+
+- intent: inform_num_travelers
+  examples: |
+    - just me
+    - it's just for one person
+    - [1](num_travelers)
+    - [2](num_travelers) of us
+    - there will be [3](num_travelers) of us
+    - [4](num_travelers) people
+    - a group of [5](num_travelers)
+    - solo trip
+    - me and my partner, so [2](num_travelers)
+    - [2](num_travelers)
+
+- intent: inform_budget_amount
+  examples: |
+    - [500](budget_amount) euros
+    - around [800](budget_amount) EUR
+    - my budget is [1200](budget_amount)
+    - I can spend [300](budget_amount) pounds
+    - about [2000](budget_amount) dollars
+    - [650](budget_amount)
+    - roughly [1000](budget_amount) euros total
+    - I don't want to spend more than [400](budget_amount)
+    - [900](budget_amount) USD
+
+- intent: inform_sustainability_level
+  examples: |
+    - [I care a lot about the environment](sustainability_level:high)
+    - [sustainability is my top priority](sustainability_level:high)
+    - [as green as possible](sustainability_level:high)
+    - [I want the lowest carbon option](sustainability_level:high)
+    - [a mix of both is fine](sustainability_level:medium)
+    - [somewhere in the middle](sustainability_level:medium)
+    - [balance cost and carbon](sustainability_level:medium)
+    - [price matters more to me](sustainability_level:low)
+    - [I mostly care about the cheapest option](sustainability_level:low)
+    - [budget is my main concern](sustainability_level:low)
+
+- intent: inform_priority_focus
+  examples: |
+    - [lowest carbon whatever it costs](priority_focus:carbon)
+    - [go with the greenest option](priority_focus:carbon)
+    - [minimise emissions first](priority_focus:carbon)
+    - [keep it as cheap as possible](priority_focus:cost)
+    - [lowest cost please](priority_focus:cost)
+    - [price first](priority_focus:cost)
+    - [a balance of both](priority_focus:balanced)
+    - [somewhere in between](priority_focus:balanced)
+
+- intent: ask_weather
+  examples: |
+    - what's the weather like in [Lisbon](city_name)?
+    - weather in [Berlin](city_name)
+    - is it raining in [London](city_name)?
+    - what's the forecast for [Rome](city_name)
+    - how's the weather in [Copenhagen](city_name) this week
+    - will it be cold in [Oslo](city_name)?
+    - what should I pack for [Barcelona](city_name)?
+    - temperature in [Vienna](city_name)
+    - is it sunny in [Athens](city_name) right now
+
+- intent: ask_currency_exchange
+  examples: |
+    - what's the exchange rate from [USD](from_currency) to [EUR](to_currency)?
+    - convert [GBP](from_currency) to [JPY](to_currency)
+    - how much is [100](amount) [USD](from_currency) in [EUR](to_currency)
+    - exchange rate [EUR](from_currency) to [GBP](to_currency)
+    - what is [50](amount) [GBP](from_currency) in [USD](to_currency)
+    - currency conversion from [CHF](from_currency) to [EUR](to_currency)
+    - how many euros is [200](amount) dollars
+
+- intent: ask_carbon_footprint
+  examples: |
+    - how much CO2 does a flight produce?
+    - what's the carbon footprint of the train option?
+    - how much carbon will this trip generate?
+    - compare emissions between flying and taking the train
+    - which is greener, flying or the train?
+    - what's my carbon footprint for this trip?
+
+- intent: ask_carbon_offset_info
+  examples: |
+    - what is carbon offsetting?
+    - can I offset my flight emissions?
+    - tell me about carbon offset programs
+    - how do carbon offsets work?
+    - where can I buy carbon credits for my trip?
+
+- intent: see_more_options
+  examples: |
+    - show me more options
+    - what else do you have?
+    - any other hotels?
+    - give me more choices
+    - see more results
+    - what other flights are there?
+
+- intent: confirm_booking
+  examples: |
+    - book this one
+    - I'll take the first option
+    - confirm this trip
+    - let's book it
+    - go ahead and book that hotel
+    - yes, book the flight
+    - reserve this option
+
+- intent: request_human_handover
+  examples: |
+    - I want to speak to a real person
+    - can I talk to a human advisor?
+    - connect me with an agent
+    - this isn't working, get me a human
+    - I need a real travel agent
+    - transfer me to support
+    - can a human help me instead?
+
+- intent: out_of_scope
+  examples: |
+    - tell me a joke
+    - what's the meaning of life?
+    - who is the president of France?
+    - can you write my homework for me?
+    - what's 2 plus 2?
+    - sing me a song
+    - what's your favourite movie?
+    - do you have a girlfriend?
+    - tell me about the stock market
+    - what's the capital of Japan?
+    - can you help me with my math homework?
+    - recommend me a video game
