@@ -1,0 +1,9 @@
+# Pinned to the pydantic-1 generation of FastAPI on purpose: rasa==3.6.21
+# (see /requirements.txt) requires pydantic~=1.10, and this whole project
+# runs inside ONE shared Python environment in the Docker image (see
+# Dockerfile) so both halves have to agree on the same pydantic major
+# version. This service's own Pydantic usage (one plain BaseModel) needs
+# nothing from v2, so pinning here costs nothing.
+fastapi==0.95.2
+uvicorn[standard]==0.22.0
+pydantic==1.10.9
