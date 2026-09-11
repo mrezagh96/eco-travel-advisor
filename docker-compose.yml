@@ -1,0 +1,55 @@
+version: "3.8"
+
+# =============================================================================
+# Local development topology — four ISOLATED containers, all built from the
+# same image (see Dockerfile), only the startup command differs per service.
+# This is closer to how a real deployment would separate concerns; the
+# single combined container in Dockerfile/start.sh exists specifically
+# because HuggingFace Spaces only routes traffic to one port. Use whichever
+# fits what you're doing: `docker compose up` for day-to-day local dev,
+# a plain `docker build && docker run` of the root Dockerfile to rehearse
+# exactly what HuggingFace Spaces will do.
+# =============================================================================
+
+services:
+  flight-service:
+    build: .
+    command: ["uvicorn", "flight_data_service.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  actions:
+    build: .
+    command: ["rasa", "run", "actions", "--port", "5055"]
+    environment:
+      - FLIGHT_SERVICE_URL=http://flight-service:8000
+    depends_on:
+      flight-service:
+        condition: service_healthy
+    ports:
+      - "5055:5055"
+
+  rasa:
+    build: .
+    command: ["rasa", "run", "--enable-api", "--cors", "*", "--port", "5005"]
+    environment:
+      - ACTIONS_HOST=actions
+    depends_on:
+      - actions
+    ports:
+      - "5005:5005"
+
+  streamlit:
+    build: .
+    command: ["streamlit", "run", "streamlit_app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+    environment:
+      - RASA_URL=http://rasa:5005
+    depends_on:
+      - rasa
+    ports:
+      - "8501:8501"

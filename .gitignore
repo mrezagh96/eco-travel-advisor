@@ -1,0 +1,22 @@
+# Rasa
+models/
+.rasa/
+*.tar.gz
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Env / secrets
+.env
+
+# Handover queue (runtime-generated, not source)
+handover_queue.jsonl
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/

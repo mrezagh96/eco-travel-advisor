@@ -1,0 +1,18 @@
+# =============================================================================
+#  endpoints.yml — Eco-Travel Advisor
+# =============================================================================
+# action_endpoint points at the custom actions server (rasa run actions,
+# default port 5055). Inside Docker Compose / the HuggingFace Spaces
+# container this resolves via the service name "actions"; the ACTIONS_HOST
+# env var lets it fall back to localhost for plain local development
+# (Worksheet 1 / 2 style: two terminals on one machine).
+# =============================================================================
+
+action_endpoint:
+  url: "http://${ACTIONS_HOST:-localhost}:5055/webhook"
+
+# tracker_store: left as the default in-memory store (InMemoryTrackerStore).
+# For this coursework deployment that is a deliberate, documented choice —
+# see README.md "Known limitations" — a persistent store (SQL/Redis) would
+# be the production upgrade path but adds a database dependency that isn't
+# justified for a demo on HuggingFace Spaces' free tier.

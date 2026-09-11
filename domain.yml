@@ -1,0 +1,319 @@
+version: "3.1"
+
+# =============================================================================
+#  domain.yml — Eco-Travel Advisor
+#  Advanced Conversational UI Design & Chatbot Development — BSBI / UCA
+# =============================================================================
+
+intents:
+  - greet
+  - goodbye
+  - affirm
+  - deny
+  - thank_you
+  - bot_challenge
+  - ask_trip_planning              # "I want to go from Berlin to Lisbon"
+  - inform_num_travelers
+  - inform_budget_amount
+  - inform_sustainability_level
+  - inform_priority_focus
+  - inform_dates
+  - ask_weather
+  - ask_currency_exchange
+  - ask_carbon_footprint
+  - ask_carbon_offset_info
+  - confirm_booking
+  - see_more_options
+  - request_human_handover
+  - out_of_scope                   # explicit off-topic chit-chat / trivia
+  - nlu_fallback                   # reserved: raised by FallbackClassifier
+
+entities:
+  - origin_city
+  - destination_city
+  - city_name
+  - num_travelers
+  - budget_amount
+  - currency_code
+  - sustainability_level
+  - priority_focus
+  - from_currency
+  - to_currency
+  - amount
+
+slots:
+  # ---- trip-planning form slots --------------------------------------------
+  origin_city:
+    type: text
+    influence_conversation: true
+    mappings:
+      - type: from_entity
+        entity: origin_city
+
+  destination_city:
+    type: text
+    influence_conversation: true
+    mappings:
+      - type: from_entity
+        entity: destination_city
+
+  travel_date_from:
+    type: text
+    influence_conversation: false
+    mappings:
+      - type: from_text
+        conditions:
+          - active_loop: trip_planning_form
+            requested_slot: travel_date_from
+
+  travel_date_to:
+    type: text
+    influence_conversation: false
+    mappings:
+      - type: from_text
+        conditions:
+          - active_loop: trip_planning_form
+            requested_slot: travel_date_to
+
+  num_travelers:
+    type: float
+    influence_conversation: false
+    mappings:
+      - type: from_entity
+        entity: num_travelers
+      - type: from_text
+        conditions:
+          - active_loop: trip_planning_form
+            requested_slot: num_travelers
+
+  budget_amount:
+    type: float
+    influence_conversation: false
+    mappings:
+      - type: from_entity
+        entity: budget_amount
+      - type: from_text
+        conditions:
+          - active_loop: trip_planning_form
+            requested_slot: budget_amount
+
+  budget_currency:
+    type: text
+    influence_conversation: false
+    initial_value: "EUR"
+    mappings:
+      - type: from_entity
+        entity: currency_code
+
+  sustainability_level:
+    type: text
+    influence_conversation: true
+    mappings:
+      - type: from_entity
+        entity: sustainability_level
+
+  priority_focus:
+    type: text
+    influence_conversation: false
+    mappings:
+      - type: from_entity
+        entity: priority_focus
+
+  # ---- standalone-intent slots (independent of the trip form) -------------
+  city_name:
+    type: text
+    influence_conversation: false
+    mappings:
+      - type: from_entity
+        entity: city_name
+
+  from_currency:
+    type: text
+    influence_conversation: false
+    mappings:
+      - type: from_entity
+        entity: from_currency
+
+  to_currency:
+    type: text
+    influence_conversation: false
+    mappings:
+      - type: from_entity
+        entity: to_currency
+
+  exchange_amount:
+    type: float
+    influence_conversation: false
+    initial_value: 1
+    mappings:
+      - type: from_entity
+        entity: amount
+
+  # ---- results storage — written only by custom actions -------------------
+  trip_results:
+    type: any
+    influence_conversation: false
+    mappings:
+      - type: custom
+
+  booking_reference:
+    type: text
+    influence_conversation: false
+    mappings:
+      - type: custom
+
+  # ---- fallback / handover bookkeeping (see actions/fallback.py) ----------
+  fallback_streak:
+    type: float
+    influence_conversation: false
+    initial_value: 0
+    mappings:
+      - type: custom
+
+  fallback_total_giveups:
+    type: float
+    influence_conversation: false
+    initial_value: 0
+    mappings:
+      - type: custom
+
+  handover_active:
+    type: bool
+    influence_conversation: false
+    initial_value: false
+    mappings:
+      - type: custom
+
+forms:
+  trip_planning_form:
+    required_slots:
+      - origin_city
+      - destination_city
+      - travel_date_from
+      - travel_date_to
+      - num_travelers
+      - budget_amount
+      - sustainability_level
+      # NOTE: `priority_focus` is NOT listed here on purpose. It is an
+      # *adaptive* question — it only gets added to the list at runtime by
+      # ActionValidateTripPlanningForm.required_slots() when
+      # sustainability_level == "high". This is the exact required_slots()
+      # pattern from "Making a Bot Behave" §2.3, applied to a real branch
+      # instead of the worksheet's tool-comparison example.
+
+responses:
+  utter_greet:
+    - text: "Hi, I'm your Eco-Travel Advisor 🌍 — tell me where you're headed and I'll put together a lower-carbon trip plan. Try something like \"I want to go from Berlin to Lisbon\"."
+
+  utter_goodbye:
+    - text: "Safe and sustainable travels! Come back any time you're planning your next trip. 👋"
+
+  utter_bot_challenge:
+    - text: "I'm a conversational assistant built on Rasa for this course project — I plan low-carbon trips using live map, weather and currency data, not a human on the other end."
+
+  utter_thank_you:
+    - text: "You're welcome! Anything else I can help you plan?"
+
+  # ---- form questions (static / non-adaptive ones) -------------------------
+  utter_ask_origin_city:
+    - text: "Where are you travelling from?"
+
+  utter_ask_destination_city:
+    - text: "And where would you like to go?"
+      buttons:
+        - title: "Lisbon"
+          payload: '/ask_trip_planning{"destination_city": "Lisbon"}'
+        - title: "Rome"
+          payload: '/ask_trip_planning{"destination_city": "Rome"}'
+        - title: "Copenhagen"
+          payload: '/ask_trip_planning{"destination_city": "Copenhagen"}'
+        - title: "Somewhere else"
+          payload: '/ask_trip_planning'
+
+  utter_ask_travel_date_from:
+    - text: "When do you want to depart? (e.g. \"2026-11-14\" or \"mid November\")"
+
+  utter_ask_travel_date_to:
+    - text: "And when would you like to come back?"
+
+  utter_ask_num_travelers:
+    - text: "How many people are travelling?"
+      buttons:
+        - title: "Just me"
+          payload: '/inform_num_travelers{"num_travelers": "1"}'
+        - title: "2"
+          payload: '/inform_num_travelers{"num_travelers": "2"}'
+        - title: "3"
+          payload: '/inform_num_travelers{"num_travelers": "3"}'
+        - title: "4 or more"
+          payload: '/inform_num_travelers{"num_travelers": "4"}'
+
+  utter_ask_budget_amount:
+    - text: "What's your total budget for the trip? You can type an amount (e.g. \"800 EUR\") or pick a range:"
+      buttons:
+        - title: "Under €300"
+          payload: '/inform_budget_amount{"budget_amount": "250"}'
+        - title: "€300 – €800"
+          payload: '/inform_budget_amount{"budget_amount": "550"}'
+        - title: "€800 – €2000"
+          payload: '/inform_budget_amount{"budget_amount": "1400"}'
+        - title: "€2000+"
+          payload: '/inform_budget_amount{"budget_amount": "2500"}'
+
+  utter_ask_sustainability_level:
+    - text: "Last question — how much do you want sustainability to drive these recommendations?"
+      buttons:
+        - title: "🌱 Prioritise low carbon"
+          payload: '/inform_sustainability_level{"sustainability_level": "high"}'
+        - title: "⚖️ Balance carbon and cost"
+          payload: '/inform_sustainability_level{"sustainability_level": "medium"}'
+        - title: "💸 Prioritise low cost"
+          payload: '/inform_sustainability_level{"sustainability_level": "low"}'
+
+  utter_ask_priority_focus:
+    - text: "Since low-carbon travel matters most to you, one more thing: what should I optimise for first when options trade off against each other?"
+      buttons:
+        - title: "Lowest carbon, whatever it costs"
+          payload: '/inform_priority_focus{"priority_focus": "carbon"}'
+        - title: "Lowest cost, within reason"
+          payload: '/inform_priority_focus{"priority_focus": "cost"}'
+        - title: "Balanced"
+          payload: '/inform_priority_focus{"priority_focus": "balanced"}'
+
+  utter_ask_rephrase:
+    - text: "Could you say that a different way?"
+
+  utter_default:
+    - text: "Sorry, I'm not sure how to help with that."
+
+  utter_handover_notice:
+    - text: "🧑‍💼 You're now connected with a human travel advisor. They'll pick up from exactly where we left off — no need to repeat yourself."
+
+  utter_carbon_offset_info:
+    - text: >-
+        Carbon offsetting means paying into a verified project (reforestation,
+        renewable energy, methane capture) that removes or avoids roughly as
+        much CO2e as your trip produces. It doesn't cancel out the emissions
+        from your journey — the flight still happened — but it's one way to
+        fund climate mitigation elsewhere. Two widely-used, independently
+        audited registries are Gold Standard (goldstandard.org) and Atmosfair
+        (atmosfair.de), both of which let you calculate and offset a specific
+        flight. This project doesn't integrate a live offsetting API — that
+        would involve real payment processing, which is out of scope for a
+        coursework prototype — so treat this as pointing you to a real option
+        rather than a built-in feature.
+
+actions:
+  - action_generate_trip_recommendations
+  - action_get_weather
+  - action_get_currency_exchange
+  - action_get_carbon_footprint
+  - action_confirm_booking
+  - action_see_more_options
+  - action_handover_to_human
+  - action_smart_fallback
+  - validate_trip_planning_form
+
+session_config:
+  session_expiration_time: 60
+  carry_over_slots_to_new_session: true
